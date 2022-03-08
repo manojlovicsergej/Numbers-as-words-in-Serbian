@@ -7,16 +7,23 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import java.awt.Font;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
+import java.awt.Desktop;
+
 import javax.swing.SwingConstants;
 import javax.swing.JPanel;
 import java.awt.event.MouseAdapter;
@@ -33,6 +40,9 @@ public class Main {
 	private JPanel panel;
 	private JLabel lblIspisBrojevaRecima;
 	public static JTextArea labelIspis;
+	private static String putanjaFajla;
+	private static String brojKaoString;
+	private static ArrayList<Double> listFajl = new ArrayList<Double>();
 	/**
 	 * Launch the application.
 	 */
@@ -64,7 +74,7 @@ public class Main {
 		frmIspisUnetogBroja.getContentPane().setBackground(new Color(34,34,34));
 		frmIspisUnetogBroja.setUndecorated(true);
 		frmIspisUnetogBroja.setTitle("Ispis brojeva od 1000 - 1 000 000 recima");
-		frmIspisUnetogBroja.setBounds(100, 100, 502, 371);
+		frmIspisUnetogBroja.setBounds(100, 100, 502, 460);
 		frmIspisUnetogBroja.setLocationRelativeTo(null);
 		frmIspisUnetogBroja.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmIspisUnetogBroja.getContentPane().setLayout(null);
@@ -72,19 +82,19 @@ public class Main {
 		panel = new JPanel();
 		panel.setBorder(new LineBorder(new Color(239,114,12), 4));
 		panel.setBackground(new Color(34,34,34));
-		panel.setBounds(0, 0, 502, 371);
+		panel.setBounds(0, 0, 502, 460);
 		frmIspisUnetogBroja.getContentPane().add(panel);
 		panel.setLayout(null);
 		
 		JLabel lblNewLabel = new JLabel("Unesite broj : ");
-		lblNewLabel.setBounds(60, 126, 140, 41);
+		lblNewLabel.setBounds(61, 221, 140, 41);
 		panel.add(lblNewLabel);
 		lblNewLabel.setForeground(new Color(239,114,12));
 		lblNewLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		lblNewLabel.setFont(new Font("Dialog", Font.BOLD, 20));
 		
 		textField = new JTextField();
-		textField.setBounds(210, 127, 215, 39);
+		textField.setBounds(211, 222, 215, 39);
 		panel.add(textField);
 		textField.setFont(new Font("Dialog", Font.PLAIN, 20));
 		textField.setColumns(10);
@@ -92,7 +102,7 @@ public class Main {
 		JButton btnNewButton = new JButton("Ispisi");
 		btnNewButton.setBackground(new Color(239,114,12));
 		btnNewButton.setForeground(new Color(34,34,34));
-		btnNewButton.setBounds(273, 179, 152, 33);
+		btnNewButton.setBounds(274, 274, 152, 33);
 		panel.add(btnNewButton);
 		btnNewButton.setFont(new Font("Monospaced", Font.BOLD, 17));
 	    
@@ -113,11 +123,11 @@ public class Main {
 	    lblIspisBrojevaRecima.setHorizontalAlignment(SwingConstants.CENTER);
 	    lblIspisBrojevaRecima.setForeground(new Color(239, 114, 12));
 	    lblIspisBrojevaRecima.setFont(new Font("Dialog", Font.ITALIC, 20));
-	    lblIspisBrojevaRecima.setBounds(48, 48, 399, 52);
+	    lblIspisBrojevaRecima.setBounds(48, 28, 399, 52);
 	    panel.add(lblIspisBrojevaRecima);
 	    
 	    JScrollPane scrollPane = new JScrollPane();
-	    scrollPane.setBounds(37, 228, 438, 118);
+	    scrollPane.setBounds(37, 318, 438, 118);
 	    scrollPane.setBorder(null);
 	    panel.add(scrollPane);
 	    
@@ -129,6 +139,28 @@ public class Main {
 	    labelIspis.setFont(new Font("Monospaced", Font.PLAIN, 25));
 	    labelIspis.setBorder(null);
 	    scrollPane.setViewportView(labelIspis);
+	    
+	    JLabel lblispisIzFajla = new JLabel("<html>Ispis iz fajla u fajl :</html>");
+	    lblispisIzFajla.setHorizontalAlignment(SwingConstants.RIGHT);
+	    lblispisIzFajla.setForeground(new Color(239, 114, 12));
+	    lblispisIzFajla.setFont(new Font("Dialog", Font.BOLD, 20));
+	    lblispisIzFajla.setBounds(61, 116, 140, 58);
+	    panel.add(lblispisIzFajla);
+	    
+	    JButton btnNewButton_1 = new JButton("Ucitaj fajl");
+	    btnNewButton_1.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    		ucitajPutanjuFajla();
+	    		ucitajIzFajla();
+	    		upisiUNoviFajl();
+	    		JOptionPane.showMessageDialog(null, "Uspesno !");
+	    	}
+	    });
+	    btnNewButton_1.setFont(new Font("Monospaced", Font.BOLD, 17));
+	    btnNewButton_1.setBounds(211, 141, 179, 33);
+	    btnNewButton_1.setForeground(new Color(34,34,34));
+	    btnNewButton_1.setBackground(new Color(239,114,12));
+	    panel.add(btnNewButton_1);
 		
 		
 		btnNewButton.addActionListener(new ActionListener() {
@@ -145,7 +177,70 @@ public class Main {
 		
 	}
 	
+	public static void upisiUNoviFajl() {
+		
+		try {
+			BufferedWriter bf = new BufferedWriter(new FileWriter(new File(putanjaFajla)));
+			
+			for(int i = 0 ;i < listFajl.size();i++) {
+				if(listFajl.get(i)>=1000 && listFajl.get(i)<=999999) {
+					ispisiSlovima(listFajl.get(i).intValue(),listFajl.get(i));
+					bf.write(brojKaoString+"\n");
+
+				}
+			}
+			
+			bf.close();
+			brojKaoString = "";
+			
+			Desktop.getDesktop().open(new File(putanjaFajla));
+			putanjaFajla = "";
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+		
+		
+		
+	}
 	
+	public static void ucitajIzFajla() {
+		
+		File f = new File(putanjaFajla);
+		Scanner sc;
+		
+		try {
+			sc = new Scanner(f);
+			
+			while(sc.hasNextLine()) {
+				listFajl.add(Double.parseDouble(sc.nextLine()));
+			}
+			
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(null, "Greska prilikom citanja fajla . Proverite strukturu fajla , svaki broj mora da bude u jednom redu !");
+			e.printStackTrace();
+		}
+		
+		System.out.println(listFajl);
+		
+	}
+	
+	public static void ucitajPutanjuFajla() {
+		
+		JFileChooser chooser = new JFileChooser();
+		chooser.showOpenDialog(chooser);
+		chooser.setVisible(true);
+
+		putanjaFajla = chooser.getSelectedFile().toString();
+		
+		
+	}
 	
 	
 	public static void ucitajSlovima() {
@@ -382,6 +477,7 @@ public class Main {
 			
 	
 			labelIspis.setText("Slovima :  " +h + st + d+ ob );
+			brojKaoString = "" +h + st + d+ ob ;
 
 		}
 		
@@ -547,7 +643,7 @@ public class Main {
 					}
 					
 					labelIspis.setText("Slovima :  " +ispisHiljada + ""+ hiljadic + stt1 + ds1 +brojcanik1 );
-				
+					brojKaoString = "" +ispisHiljada + ""+ hiljadic + stt1 + ds1 +brojcanik1 ;
 					
 					
 				}
@@ -563,7 +659,7 @@ public class Main {
 					
 					
 					labelIspis.setText("Slovima :  " +ispisHiljada + ""+ hiljadic + stt1 +brojcanik1 );
-			
+					brojKaoString = "" +ispisHiljada + ""+ hiljadic + stt1 +brojcanik1 ;
 				
 					
 					
@@ -753,6 +849,7 @@ public class Main {
 					}
 					
 					labelIspis.setText("Slovima :  "+ bilion +ispisHiljada + ""+ hiljadic + stt1 + ds1 +brojcanik1 );
+					brojKaoString = ""+ bilion +ispisHiljada + ""+ hiljadic + stt1 + ds1 +brojcanik1 ;
 				
 				
 				}
@@ -768,7 +865,7 @@ public class Main {
 					
 					
 					labelIspis.setText("Slovima :  "+ bilion +ispisHiljada + ""+ hiljadic + stt1 +brojcanik1 );
-					
+					brojKaoString = ""+ bilion +ispisHiljada + ""+ hiljadic + stt1 +brojcanik1;
 					
 					
 				}
